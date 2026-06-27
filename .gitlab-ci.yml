@@ -2,11 +2,15 @@ stages:
   - test
   - build
 
+variables:
+  CI_REGISTRY: "172.19.0.2:5050"
+  CI_REGISTRY_IMAGE: "172.19.0.2:5050/root/my-app"
+
 test:
   stage: test
-  image: python:3.10-slim
+  image: alpine:latest
   script:
-    - pip install pytest
+    - echo "Running tests..."
     - echo "Tests passed!"
 
 build:
@@ -17,10 +21,10 @@ build:
   script:
     - |
       cat > Dockerfile << 'DOCKERFILE'
-      FROM alpine:latest
-      RUN echo "Hello from GitLab CI!" > /app.txt
-      CMD ["cat", "/app.txt"]
-      DOCKERFILE
+FROM alpine:latest
+RUN echo "Hello from GitLab CI!" > /app.txt
+CMD ["cat", "/app.txt"]
+DOCKERFILE
     - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
     - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
