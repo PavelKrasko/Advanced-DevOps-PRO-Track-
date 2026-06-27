@@ -19,12 +19,9 @@ build:
 docker-build:
   stage: docker
   image: docker:latest
-  services:
-    - docker:dind
   variables:
-    DOCKER_TLS_CERTDIR: ""
-    DOCKER_HOST: tcp://docker:2376
+    DOCKER_HOST: unix:///var/run/docker.sock
   script:
     - docker --version
     - docker ps
-    - echo "Docker-in-Docker works!"
+    - echo "Docker works!"
