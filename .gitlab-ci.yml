@@ -1,7 +1,6 @@
 stages:
   - test
   - build
-  - docker
 
 test:
   stage: test
@@ -12,16 +11,17 @@ test:
 
 build:
   stage: build
-  image: alpine:latest
-  script:
-    - echo "Build complete!"
-
-docker-build:
-  stage: docker
   image: docker:latest
   variables:
     DOCKER_HOST: unix:///var/run/docker.sock
   script:
-    - docker --version
-    - docker ps
-    - echo "Docker works!"
+    - |
+      cat > Dockerfile << 'DOCKERFILE'
+      FROM alpine:latest
+      RUN echo "Hello from GitLab CI!" > /app.txt
+      CMD ["cat", "/app.txt"]
+      DOCKERFILE
+    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - echo "Pushed to $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
