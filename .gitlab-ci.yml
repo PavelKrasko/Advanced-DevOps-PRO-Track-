@@ -1,0 +1,15 @@
+stages:
+  - test
+  - build
+test:
+  stage: test
+  image: alpine:latest
+  script:
+    - echo "Running tests..."
+    - echo "Tests passed!"
+build:
+  stage: build
+  image: alpine:latest
+  script:
+    - echo "Building application..."
+    - echo "Build complete!"
