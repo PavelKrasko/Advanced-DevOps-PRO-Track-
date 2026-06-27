@@ -1,18 +1,30 @@
 stages:
   - test
   - build
+  - docker
 
 test:
   stage: test
   image: python:3.10-slim
   script:
     - pip install pytest
-    - pytest --version
     - echo "Tests passed!"
 
 build:
   stage: build
   image: alpine:latest
   script:
-    - echo "Building application..."
     - echo "Build complete!"
+
+docker-build:
+  stage: docker
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2376
+  script:
+    - docker --version
+    - docker ps
+    - echo "Docker-in-Docker works!"
