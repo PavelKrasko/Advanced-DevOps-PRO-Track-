@@ -1,12 +1,15 @@
 stages:
   - test
   - build
+
 test:
   stage: test
-  image: alpine:latest
+  image: python:3.10-slim
   script:
-    - echo "Running tests..."
+    - pip install pytest
+    - pytest --version
     - echo "Tests passed!"
+
 build:
   stage: build
   image: alpine:latest
