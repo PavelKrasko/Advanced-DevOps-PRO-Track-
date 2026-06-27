@@ -1,0 +1,6 @@
+version: "3.9"
+
+services:
+  app:
+    image: my-app:latest
+    container_name: my-app-prod
