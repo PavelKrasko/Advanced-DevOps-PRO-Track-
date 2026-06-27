@@ -1,0 +1,25 @@
+pipeline {
+    agent any
+    stages {
+        stage('Test') {
+            steps {
+                sh 'echo "Running tests..."'
+                sh 'pytest --version || echo "pytest not installed, skipping"'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'echo "Building..."'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh 'echo "Deploying..."'
+            }
+        }
+    }
+    post {
+        success { echo 'Pipeline succeeded!' }
+        failure { echo 'Pipeline failed!' }
+    }
+}
