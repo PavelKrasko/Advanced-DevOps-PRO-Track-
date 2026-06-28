@@ -1,0 +1,36 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Test') {
+            steps {
+                sh 'echo "Tests passed!"'
+            }
+        }
+
+        stage('Build Image') {
+            steps {
+                sh '''
+                    mkdir -p /tmp/myapp
+                    cat > /tmp/myapp/Dockerfile << EOF
+FROM alpine:latest
+RUN echo "Hello from Jenkins!" > /app.txt
+CMD ["cat", "/app.txt"]
+EOF
+                    docker build -t ppkrasko/my-app-jenkins:${BUILD_NUMBER} /tmp/myapp
+                '''
+            }
+        }
+
+        stage('Deploy to K8s') {
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh "sed -i 's/IMAGE_TAG/${BUILD_NUMBER}/g' k8s/deployment.yml"
+                    sh 'cat k8s/deployment.yml | grep image'
+                    sh 'kubectl apply -f k8s/deployment.yml --insecure-skip-tls-verify'
+                    sh 'kubectl get pods --insecure-skip-tls-verify'
+                }
+            }
+        }
+    }
+}

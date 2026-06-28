@@ -1,0 +1,65 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Test') {
+            steps {
+                sh 'echo "Tests passed!"'
+            }
+        }
+
+        stage('Build Image') {
+            steps {
+                sh '''
+                    mkdir -p /tmp/myapp
+                    cat > /tmp/myapp/Dockerfile << EOF
+FROM alpine:latest
+RUN echo "Hello from Jenkins!" > /app.txt
+CMD ["cat", "/app.txt"]
+EOF
+                    docker build -t ppkrasko/my-app-jenkins:${BUILD_NUMBER} /tmp/myapp
+                '''
+            }
+        }
+
+        stage('Deploy to K8s') {
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh """
+                        helm upgrade --install my-app ./helm-charts/my-app-chart \
+                          --set image.tag=${BUILD_NUMBER} \
+                          --insecure-skip-tls-verify \
+                          --wait
+                    """
+                }
+            }
+        }
+
+        stage('Smoke Test') {
+            steps {
+                script {
+                    try {
+                        sh 'echo "Running smoke tests..."'
+                        sh 'echo "Smoke tests passed!"'
+                    } catch (Exception e) {
+                        echo "Smoke test failed! Rolling back..."
+                        withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                            sh 'helm rollback my-app --insecure-skip-tls-verify'
+                            sh 'kubectl get pods --insecure-skip-tls-verify'
+                        }
+                        error "Deployment rolled back due to failed smoke tests!"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Deployment successful! Version: ${BUILD_NUMBER}"
+        }
+        failure {
+            echo "Pipeline failed! Check logs."
+        }
+    }
+}

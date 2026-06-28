@@ -1,0 +1,17 @@
+pipeline {
+    agent {
+        docker {
+            image 'lachlanevenson/k8s-kubectl:v1.25.0'
+            args '-u root --entrypoint='
+        }
+    }
+    stages {
+        stage('K8s Check') {
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh 'kubectl version --client'
+                }
+            }
+        }
+    }
+}
