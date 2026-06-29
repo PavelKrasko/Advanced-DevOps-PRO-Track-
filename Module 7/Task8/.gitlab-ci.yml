@@ -1,0 +1,27 @@
+review:
+  stage: review
+  image: dtzar/helm-kubectl:latest
+  script:
+    - echo $KUBE_CONFIG | base64 -d > config.yml
+    - kubectl --kubeconfig=config.yml create namespace review-$CI_COMMIT_REF_SLUG --dry-run=client -o yaml | kubectl apply -f -
+    - sed -i "s|IMAGE_TAG|$CI_COMMIT_SHA|g" k8s/deployment.yml
+    - kubectl --kubeconfig=config.yml apply -f k8s/deployment.yml -n review-$CI_COMMIT_REF_SLUG
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG
+    url: http://localhost:8080
+    on_stop: stop_review
+  only:
+    - /^feature\/.*/
+
+stop_review:
+  stage: review
+  image: dtzar/helm-kubectl:latest
+  script:
+    - echo $KUBE_CONFIG | base64 -d > config.yml
+    - kubectl --kubeconfig=config.yml delete namespace review-$CI_COMMIT_REF_SLUG
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG
+    action: stop
+  when: manual
+  only:
+    - /^feature\/.*/

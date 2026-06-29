@@ -1,0 +1,9 @@
+deploy:
+  stage: deploy
+  image: dtzar/helm-kubectl:latest
+  script:
+    - echo $KUBE_CONFIG | base64 -d > config.yml
+    - kubectl --kubeconfig=config.yml get nodes
+    - kubectl --kubeconfig=config.yml apply -f k8s/deployment.yml
+  environment:
+    name: production
