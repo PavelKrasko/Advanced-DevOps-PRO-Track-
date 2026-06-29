@@ -1,6 +1,7 @@
 stages:
   - test
   - build
+  - deploy
 
 variables:
   CI_REGISTRY: "172.19.0.2:5050"
@@ -29,3 +30,12 @@ build:
     - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
     - echo "Pushed to $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+
+deploy:
+  stage: deploy
+  image: gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
+  script:
+    - kubectl config use-context root/my-app:my-agent
+    - kubectl apply -f k8s/deployment.yml
+  environment:
+    name: production
