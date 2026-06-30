@@ -1,0 +1,13 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: issuetracker-server-cb
+  namespace: default
+spec:
+  host: issuetracker-server.default.svc.cluster.local
+  trafficPolicy:
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 1s
+      baseEjectionTime: 1m
+      maxEjectionPercent: 100
